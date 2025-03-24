@@ -15,12 +15,14 @@ class TaskService {
   }
 
   // Ajouter une tâche
-  Future<void> addTask(String title, String description, bool isDone) async {
+  Future<void> addTask(
+      String title, String description, bool isDone, String priority) async {
     try {
       await tasks.add({
         'title': title,
         'description': description,
         'isDone': isDone,
+        'priority': priority,
         'createdAt': FieldValue.serverTimestamp(),
       });
       print("Tâche ajoutée avec succès !");
@@ -65,6 +67,20 @@ class TaskService {
       throw e;
     } catch (e) {
       print("Erreur lors de la mise à jour du statut : $e");
+      throw e;
+    }
+  }
+
+  // Nouvelle méthode pour mettre à jour la priorité
+  Future<void> updateTaskPriority(String taskId, String priority) async {
+    try {
+      await tasks.doc(taskId).update({
+        'priority': priority,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      print("Priorité mise à jour avec succès !");
+    } catch (e) {
+      print("Erreur lors de la mise à jour de la priorité : $e");
       throw e;
     }
   }

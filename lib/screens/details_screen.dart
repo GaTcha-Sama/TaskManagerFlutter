@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/task_service.dart';
 
-class DetailsScreen extends StatelessWidget {
+class DetailsScreen extends StatefulWidget {
   final String taskId;
   final Map<String, dynamic> task;
   static final TaskService _taskService = TaskService();
@@ -14,12 +14,36 @@ class DetailsScreen extends StatelessWidget {
   });
 
   @override
+  State<DetailsScreen> createState() => _DetailsScreenState();
+}
+
+class _DetailsScreenState extends State<DetailsScreen> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.task['title']);
+    _descriptionController =
+        TextEditingController(text: widget.task['description']);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Gérer le cas où createdAt est null ou n'est pas un Timestamp
     DateTime? createdAt;
     try {
-      createdAt = task['createdAt'] != null
-          ? (task['createdAt'] as Timestamp).toDate()
+      createdAt = widget.task['createdAt'] != null
+          ? (widget.task['createdAt'] as Timestamp).toDate()
           : null;
     } catch (e) {
       print('Erreur de conversion de la date: $e');
@@ -30,6 +54,23 @@ class DetailsScreen extends StatelessWidget {
         title: const Text("Détails de la tâche"),
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
+          IconButton(
+            icon: Icon(_isEditing ? Icons.save : Icons.edit),
+            onPressed: () async {
+              if (_isEditing) {
+                // Sauvegarder les modifications
+                await DetailsScreen._taskService.updateTask(
+                  widget.taskId,
+                  _titleController.text,
+                  _descriptionController.text,
+                );
+                setState(() => _isEditing = false);
+                Navigator.pop(context);
+              } else {
+                setState(() => _isEditing = true);
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () async {
@@ -52,7 +93,7 @@ class DetailsScreen extends StatelessWidget {
                 ),
               );
               if (confirm == true) {
-                _taskService.deleteTask(taskId);
+                DetailsScreen._taskService.deleteTask(widget.taskId);
                 Navigator.pop(context);
               }
             },
@@ -79,13 +120,21 @@ class DetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    task['title'] ?? 'Sans titre',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                  _isEditing
+                      ? TextField(
+                          controller: _titleController,
+                          decoration: const InputDecoration(labelText: 'Titre'),
+                        )
+                      : Text(
+                          widget.task['title'] ?? 'Sans titre',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
-                  ),
                   const Divider(height: 32),
                   _buildInfoRow(
                     context,
@@ -95,11 +144,19 @@ class DetailsScreen extends StatelessWidget {
                         : 'Date de création non disponible',
                   ),
                   const SizedBox(height: 16),
-                  _buildInfoRow(
-                    context,
-                    icon: Icons.description,
-                    text: task['description'] ?? 'Aucune description',
-                  ),
+                  _isEditing
+                      ? TextField(
+                          controller: _descriptionController,
+                          decoration:
+                              const InputDecoration(labelText: 'Description'),
+                          maxLines: 3,
+                        )
+                      : _buildInfoRow(
+                          context,
+                          icon: Icons.description,
+                          text: widget.task['description'] ??
+                              'Aucune description',
+                        ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -108,10 +165,11 @@ class DetailsScreen extends StatelessWidget {
                       const SizedBox(width: 8),
                       const Text('Statut : '),
                       Checkbox(
-                        value: task['isDone'],
+                        value: widget.task['isDone'],
                         activeColor: Theme.of(context).colorScheme.secondary,
                         onChanged: (bool? value) {
-                          _taskService.updateTaskStatus(taskId, value ?? false);
+                          DetailsScreen._taskService
+                              .updateTaskStatus(widget.taskId, value ?? false);
                           Navigator.pop(context);
                         },
                       ),

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'add_task_screen.dart';
 import '../services/task_service.dart';
 import 'details_screen.dart';
+import '../widgets/progress_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,28 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Liste des tâches"),
-        actions: [
-          IconButton(
-            icon: Icon(_showOnlyCompleted
-                ? Icons.check_box
-                : Icons.check_box_outline_blank),
-            onPressed: () {
-              setState(() {
-                _showOnlyCompleted = !_showOnlyCompleted;
-              });
-            },
-            tooltip: 'Filtrer les tâches terminées',
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddTaskScreen()),
-              );
-            },
-          ),
-        ],
+        centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _taskService.getTasks(),
@@ -55,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           final tasks = snapshot.data?.docs ?? [];
+          final completedTasks =
+              tasks.where((doc) => doc['isDone'] == true).length;
           final filteredTasks = _showOnlyCompleted
               ? tasks
                   .where((doc) =>
@@ -62,65 +44,177 @@ class _HomeScreenState extends State<HomeScreen> {
                   .toList()
               : tasks;
 
-          return ListView.builder(
-            itemCount: filteredTasks.length,
-            itemBuilder: (context, index) {
-              final task = filteredTasks[index].data() as Map<String, dynamic>;
-              final taskId = filteredTasks[index].id;
+          return Column(
+            children: [
+              TaskProgressIndicator(
+                totalTasks: tasks.length,
+                completedTasks: completedTasks,
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: filteredTasks.length,
+                  itemBuilder: (context, index) {
+                    final task =
+                        filteredTasks[index].data() as Map<String, dynamic>;
+                    final taskId = filteredTasks[index].id;
 
-              return Card(
-                elevation: 4,
-                child: Dismissible(
-                  key: Key(taskId),
-                  onDismissed: (direction) {
-                    _taskService.deleteTask(taskId);
-                  },
-                  background: Container(
-                    color: Colors.red.shade400,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20.0),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  child: ListTile(
-                    title: Text(
-                      task['title'] ?? '',
-                      style: TextStyle(
-                        fontWeight: task['isDone'] ?? false
-                            ? FontWeight.normal
-                            : FontWeight.bold,
-                        decoration: task['isDone'] ?? false
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
-                    ),
-                    subtitle: Text(task['description'] ?? ''),
-                    leading: Icon(
-                      Icons.task_alt,
-                      color:
-                          task['isDone'] ?? false ? Colors.green : Colors.grey,
-                    ),
-                    trailing: Checkbox(
-                      value: task['isDone'] ?? false,
-                      activeColor: Theme.of(context).colorScheme.secondary,
-                      onChanged: (bool? value) {
-                        _taskService.updateTaskStatus(taskId, value ?? false);
-                      },
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailsScreen(
-                            taskId: taskId,
-                            task: task,
-                          ),
+                    return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color:
+                              _getPriorityColor(task['priority'] ?? 'medium'),
+                          width: 2,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                      child: Dismissible(
+                        key: Key(taskId),
+                        onDismissed: (direction) async {
+                          bool shouldDelete = await showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Confirmation'),
+                                    content: const Text(
+                                        'Êtes-vous sûr de vouloir supprimer cette tâche ?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(false);
+                                        },
+                                        child: const Text('Annuler'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(true);
+                                        },
+                                        child: const Text('Supprimer'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ) ??
+                              false;
+
+                          if (shouldDelete) {
+                            _taskService.deleteTask(taskId);
+                          }
+                        },
+                        background: Container(
+                          color: Colors.red.shade400,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20.0),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            task['title'] ?? '',
+                            style: TextStyle(
+                              fontWeight: task['isDone'] ?? false
+                                  ? FontWeight.normal
+                                  : FontWeight.bold,
+                              decoration: task['isDone'] ?? false
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                          subtitle: Text(task['description'] ?? ''),
+                          leading: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _getPriorityIcon(task['priority'] ?? 'medium'),
+                                color: _getPriorityColor(
+                                    task['priority'] ?? 'medium'),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.task_alt,
+                                color: task['isDone'] ?? false
+                                    ? Colors.green
+                                    : Colors.grey,
+                              ),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DetailsScreen(
+                                        taskId: taskId,
+                                        task: task,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, size: 20),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text('Confirmation'),
+                                        content: const Text(
+                                            'Êtes-vous sûr de vouloir supprimer cette tâche ?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context)
+                                                  .pop(); // Ferme la boîte de dialogue
+                                            },
+                                            child: const Text('Annuler'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              _taskService.deleteTask(taskId);
+                                              Navigator.of(context)
+                                                  .pop(); // Ferme la boîte de dialogue
+                                            },
+                                            child: const Text('Supprimer'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                              Checkbox(
+                                value: task['isDone'] ?? false,
+                                activeColor:
+                                    Theme.of(context).colorScheme.secondary,
+                                onChanged: (bool? value) {
+                                  _taskService.updateTaskStatus(
+                                      taskId, value ?? false);
+                                },
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailsScreen(
+                                  taskId: taskId,
+                                  task: task,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
       ),
@@ -137,5 +231,31 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'high':
+        return Colors.red.shade400;
+      case 'medium':
+        return Colors.orange.shade400;
+      case 'low':
+        return Colors.green.shade400;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getPriorityIcon(String priority) {
+    switch (priority) {
+      case 'high':
+        return Icons.priority_high;
+      case 'medium':
+        return Icons.remove;
+      case 'low':
+        return Icons.arrow_downward;
+      default:
+        return Icons.help_outline;
+    }
   }
 }
