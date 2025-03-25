@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'screens/home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
+import 'services/auth_service.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -66,7 +69,25 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HomeScreen(),
+      home: AuthWrapper(),
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  final AuthService authService = AuthService();
+
+  AuthWrapper({super.key});
+
+  bool isUserConnected() {
+    User? user = FirebaseAuth.instance.currentUser;
+    return user != null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return isUserConnected()
+        ? const HomeScreen() // Utilise le HomeScreen de home_screen.dart
+        : LoginScreen();
   }
 }

@@ -29,7 +29,7 @@ class TaskProgressIndicator extends StatelessWidget {
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: totalTasks == 0 ? 0 : completedTasks / totalTasks,
-              backgroundColor: Colors.grey[200],
+              backgroundColor: Colors.grey[300],
               valueColor: AlwaysStoppedAnimation<Color>(
                 Theme.of(context).colorScheme.primary,
               ),
