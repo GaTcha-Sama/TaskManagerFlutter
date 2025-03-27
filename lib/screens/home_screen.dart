@@ -7,6 +7,8 @@ import '../widgets/progress_indicator.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 
+enum TaskFilter { all, completed, todo } // Enum pour les filtres
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -17,7 +19,22 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TaskService _taskService = TaskService();
   final AuthService _authService = AuthService();
-  bool _showOnlyCompleted = false;
+  TaskFilter _currentFilter = TaskFilter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ajout de l'écoute des tâches non terminées
+    FirebaseFirestore.instance
+        .collection('tasks')
+        .where('isDone', isEqualTo: false)
+        .snapshots()
+        .listen((snapshot) {
+      snapshot.docs.forEach((doc) {
+        print(doc['title']); // Affiche les titres des tâches non terminées
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +43,28 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text("Liste des tâches"),
         centerTitle: true,
         actions: [
+          PopupMenuButton<TaskFilter>(
+            icon: const Icon(Icons.filter_list),
+            onSelected: (TaskFilter filter) {
+              setState(() {
+                _currentFilter = filter;
+              });
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
+                value: TaskFilter.all,
+                child: Text('Toutes les tâches'),
+              ),
+              const PopupMenuItem(
+                value: TaskFilter.completed,
+                child: Text('Tâches terminées'),
+              ),
+              const PopupMenuItem(
+                value: TaskFilter.todo,
+                child: Text('Tâches à faire'),
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -54,12 +93,13 @@ class _HomeScreenState extends State<HomeScreen> {
           final tasks = snapshot.data?.docs ?? [];
           final completedTasks =
               tasks.where((doc) => doc['isDone'] == true).length;
-          final filteredTasks = _showOnlyCompleted
-              ? tasks
-                  .where((doc) =>
-                      (doc.data() as Map<String, dynamic>)['isDone'] == true)
-                  .toList()
-              : tasks;
+          final filteredTasks = switch (_currentFilter) {
+            TaskFilter.completed =>
+              tasks.where((doc) => doc['isDone'] == true).toList(),
+            TaskFilter.todo =>
+              tasks.where((doc) => doc['isDone'] == false).toList(),
+            TaskFilter.all => tasks,
+          };
 
           return Column(
             children: [
