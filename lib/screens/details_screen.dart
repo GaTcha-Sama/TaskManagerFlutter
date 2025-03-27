@@ -53,8 +53,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Détails de la tâche"),
+        title: const Text(
+          "Détails de la tâche",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: Icon(_isEditing ? Icons.save : Icons.edit),
