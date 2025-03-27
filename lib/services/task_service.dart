@@ -8,7 +8,8 @@ class TaskService {
   Stream<QuerySnapshot> getTasks() {
     try {
       return tasks
-          .orderBy('priority', descending: false) // Tri par priorité croissante
+          .orderBy('priority',
+              descending: false) // Tri par ordre alphabétique croissant
           .snapshots();
     } catch (e) {
       print("Erreur dans getTasks: $e");
@@ -39,11 +40,12 @@ class TaskService {
 
   // Mettre à jour une tâche
   Future<void> updateTask(
-      String taskId, String title, String description) async {
+      String taskId, String title, String description, String priority) async {
     try {
       await tasks.doc(taskId).update({
         'title': title,
         'description': description,
+        'priority': priority,
         'updatedAt': FieldValue.serverTimestamp(),
       });
       print("Tâche mise à jour avec succès !");

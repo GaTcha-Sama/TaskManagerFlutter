@@ -21,6 +21,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   bool _isEditing = false;
+  late String _selectedPriority;
 
   @override
   void initState() {
@@ -28,6 +29,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     _titleController = TextEditingController(text: widget.task['title']);
     _descriptionController =
         TextEditingController(text: widget.task['description']);
+    _selectedPriority = widget.task['priority'] ?? 'medium';
   }
 
   @override
@@ -63,6 +65,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   widget.taskId,
                   _titleController.text,
                   _descriptionController.text,
+                  _selectedPriority,
                 );
                 setState(() => _isEditing = false);
                 Navigator.pop(context);
@@ -157,6 +160,34 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           text: widget.task['description'] ??
                               'Aucune description',
                         ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.flag,
+                          color: Theme.of(context).colorScheme.secondary),
+                      const SizedBox(width: 8),
+                      const Text('Priorité : '),
+                      _isEditing
+                          ? DropdownButton<String>(
+                              value: _selectedPriority,
+                              items:
+                                  ['low', 'medium', 'high'].map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedPriority = newValue;
+                                  });
+                                }
+                              },
+                            )
+                          : Text(widget.task['priority'] ?? 'medium'),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
