@@ -7,7 +7,9 @@ class TaskService {
   // Obtenir le flux des tâches
   Stream<QuerySnapshot> getTasks() {
     try {
-      return tasks.snapshots();
+      return tasks
+          .orderBy('priority', descending: false) // Tri par priorité croissante
+          .snapshots();
     } catch (e) {
       print("Erreur dans getTasks: $e");
       rethrow;
