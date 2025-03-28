@@ -7,7 +7,7 @@ import '../widgets/progress_indicator.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 
-enum TaskFilter { all, completed, todo } // Enum pour les filtres
+enum TaskFilter { all, completed, todo }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,14 +24,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Ajout de l'écoute des tâches non terminées
     FirebaseFirestore.instance
         .collection('tasks')
         .where('isDone', isEqualTo: false)
         .snapshots()
         .listen((snapshot) {
       for (var doc in snapshot.docs) {
-        print(doc['title']); // Affiche les titres des tâches non terminées
+        print(doc['title']);
       }
     });
   }
@@ -224,16 +223,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                         actions: [
                                           TextButton(
                                             onPressed: () {
-                                              Navigator.of(context)
-                                                  .pop(); // Ferme la boîte de dialogue
+                                              Navigator.of(context).pop();
                                             },
                                             child: const Text('Annuler'),
                                           ),
                                           TextButton(
                                             onPressed: () {
                                               _taskService.deleteTask(taskId);
-                                              Navigator.of(context)
-                                                  .pop(); // Ferme la boîte de dialogue
+                                              Navigator.of(context).pop();
                                             },
                                             child: const Text('Supprimer'),
                                           ),

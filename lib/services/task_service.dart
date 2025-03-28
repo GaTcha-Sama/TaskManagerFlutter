@@ -4,20 +4,15 @@ class TaskService {
   final CollectionReference tasks =
       FirebaseFirestore.instance.collection('tasks');
 
-  // Obtenir le flux des tâches
   Stream<QuerySnapshot> getTasks() {
     try {
-      return tasks
-          .orderBy('priority',
-              descending: false) // Tri par ordre alphabétique croissant
-          .snapshots();
+      return tasks.orderBy('priority', descending: false).snapshots();
     } catch (e) {
       print("Erreur dans getTasks: $e");
       rethrow;
     }
   }
 
-  // Ajouter une tâche
   Future<void> addTask(
       String title, String description, bool isDone, String priority) async {
     try {
@@ -38,7 +33,6 @@ class TaskService {
     }
   }
 
-  // Mettre à jour une tâche
   Future<void> updateTask(
       String taskId, String title, String description, String priority) async {
     try {
@@ -58,7 +52,6 @@ class TaskService {
     }
   }
 
-  // Mettre à jour le statut d'une tâche
   Future<void> updateTaskStatus(String taskId, bool isDone) async {
     try {
       await tasks.doc(taskId).update({
@@ -75,7 +68,6 @@ class TaskService {
     }
   }
 
-  // Nouvelle méthode pour mettre à jour la priorité
   Future<void> updateTaskPriority(String taskId, String priority) async {
     try {
       await tasks.doc(taskId).update({
@@ -89,7 +81,6 @@ class TaskService {
     }
   }
 
-  // Supprimer une tâche
   Future<void> deleteTask(String taskId) async {
     try {
       await tasks.doc(taskId).delete();

@@ -41,7 +41,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Gérer le cas où createdAt est null ou n'est pas un Timestamp
     DateTime? createdAt;
     try {
       createdAt = widget.task['createdAt'] != null
@@ -64,7 +63,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
             icon: Icon(_isEditing ? Icons.save : Icons.edit),
             onPressed: () async {
               if (_isEditing) {
-                // Sauvegarder les modifications
                 await DetailsScreen._taskService.updateTask(
                   widget.taskId,
                   _titleController.text,
