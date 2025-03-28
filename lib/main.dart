@@ -87,7 +87,8 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return isUserConnected()
-        ? const HomeScreen() // Utilise le HomeScreen de home_screen.dart
-        : LoginScreen();
+        ? const HomeScreen()
+        : // Utilise le HomeScreen de home_screen.dart
+        LoginScreen();
   }
 }

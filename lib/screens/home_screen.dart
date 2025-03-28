@@ -30,9 +30,9 @@ class _HomeScreenState extends State<HomeScreen> {
         .where('isDone', isEqualTo: false)
         .snapshots()
         .listen((snapshot) {
-      snapshot.docs.forEach((doc) {
+      for (var doc in snapshot.docs) {
         print(doc['title']); // Affiche les titres des tâches non terminées
-      });
+      }
     });
   }
 

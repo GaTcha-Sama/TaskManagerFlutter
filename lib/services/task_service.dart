@@ -31,10 +31,10 @@ class TaskService {
       print("Tâche ajoutée avec succès !");
     } on FirebaseException catch (e) {
       print("Erreur Firebase lors de l'ajout : ${e.message}");
-      throw e;
+      rethrow;
     } catch (e) {
       print("Erreur lors de l'ajout : $e");
-      throw e;
+      rethrow;
     }
   }
 
@@ -51,10 +51,10 @@ class TaskService {
       print("Tâche mise à jour avec succès !");
     } on FirebaseException catch (e) {
       print("Erreur Firebase lors de la mise à jour : ${e.message}");
-      throw e;
+      rethrow;
     } catch (e) {
       print("Erreur lors de la mise à jour : $e");
-      throw e;
+      rethrow;
     }
   }
 
@@ -68,10 +68,10 @@ class TaskService {
       print("Statut de la tâche mis à jour avec succès !");
     } on FirebaseException catch (e) {
       print("Erreur Firebase lors de la mise à jour du statut : ${e.message}");
-      throw e;
+      rethrow;
     } catch (e) {
       print("Erreur lors de la mise à jour du statut : $e");
-      throw e;
+      rethrow;
     }
   }
 
@@ -85,7 +85,7 @@ class TaskService {
       print("Priorité mise à jour avec succès !");
     } catch (e) {
       print("Erreur lors de la mise à jour de la priorité : $e");
-      throw e;
+      rethrow;
     }
   }
 
@@ -96,10 +96,10 @@ class TaskService {
       print("Tâche supprimée avec succès !");
     } on FirebaseException catch (e) {
       print("Erreur Firebase lors de la suppression : ${e.message}");
-      throw e;
+      rethrow;
     } catch (e) {
       print("Erreur lors de la suppression : $e");
-      throw e;
+      rethrow;
     }
   }
 }

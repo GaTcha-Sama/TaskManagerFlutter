@@ -72,11 +72,12 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: const InputDecoration(labelText: 'Mot de passe'),
               obscureText: true,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: login,
               child: const Text('Connexion'),
             ),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: register,
               child: const Text('Inscription'),
